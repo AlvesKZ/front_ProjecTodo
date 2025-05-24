@@ -1,3 +1,6 @@
 body {
-    background-image: url(://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQbfqC-oHC_30DesHfGcnQ12MNDiewrzy2XnA&s);
+  background-image: url('../img/fundo.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
