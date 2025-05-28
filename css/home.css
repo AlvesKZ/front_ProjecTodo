@@ -1,0 +1,138 @@
+/* Fundo geral do site */
+body {
+  background-color: #ECF0F1;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Estilização de cards de projeto */
+.card-title {
+  color: #2980B9;
+}
+
+/* Botão primário */
+.btn-primary {
+  background-color: #3498DB;
+  border: none;
+}
+
+.btn-primary:hover {
+  background-color: #2980B9;
+}
+
+/* Botão outline claro */
+.btn-outline-light {
+  border: 2px solid #ECF0F1;
+  color: #ECF0F1;
+}
+
+.btn-outline-light:hover {
+  background-color: #ECF0F1;
+  color: #2C3E50;
+}
+
+/* Botão de perigo */
+.btn-danger {
+  background-color: #E74C3C;
+  border: none;
+}
+
+.btn-danger:hover {
+  background-color: #C0392B;
+}
+
+/* Tela inicial (login) */
+.inicial {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-image: url(/img/fundo.png);
+  background-size: cover;
+  background-position: center;
+}
+
+/* Caixa de login */
+.login {
+  width: 100%;
+  max-width: 500px;
+  padding: 3rem;
+  background-color: rgba(44, 62, 80, 0.9); 
+  border-radius: 16px;
+  color: #ECF0F1;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
+  text-align: center;
+}
+
+/* Formulário */
+.form-label {
+  font-size: 1rem;
+}
+
+.form-control {
+  background-color: #ECF0F1;
+  border: 1px solid #BDC3C7;
+}
+
+.form-control:focus {
+  border-color: #3498DB;
+}
+
+/* Tipografia */
+h1 {
+  font-size: 2.5rem;
+  font-weight: bold;
+}
+
+p {
+  color: #BDC3C7;
+}
+
+/* Links */
+a {
+  color: #3498DB;
+}
+
+a:hover {
+  color: #2980B9;
+}
+
+/* Botão grande */
+.btn-lg {
+  padding: 1rem;
+}
+
+/* Navbar personalizada */
+.navbar {
+  background-color: #134088 !important;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.navbar-text code {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: #f8f9fa;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+/* Seção "sem projetos" */
+.sem-projetos {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px; 
+  padding: 40px 0;
+}
+
+.sem-projetos-mensagem {
+  text-align: center;
+  max-width: 400px;
+  background: white;
+  padding: 30px 25px;
+  border-radius: 12px;
+  box-shadow: 0 0 15px rgba(0,0,0,0.1);
+}
+
+.sem-projetos-mensagem i {
+  font-size: 3rem;
+  color: #BDC3C7;
+}
