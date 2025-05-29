@@ -1,34 +1,46 @@
-document.addEventListener('DOMContentLoaded', () => {
-  const form = document.getElementById('login-form');
+const url = 'http://localhost:3000';
 
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
+document.addEventListener('DOMContentLoaded', function () {
 
-    const email = document.getElementById('email').value.trim();
-    const senha = document.getElementById('senha').value.trim();
+  const registerForm = document.getElementById('registerForm');
+  if (registerForm) {
+    registerForm.addEventListener('submit', function (e) {
+      e.preventDefault();
 
-    try {
-      const response = await fetch('http://localhost:3000/login/entrar', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ email, senha }),
-        credentials: 'include' 
-      });
+      const nome = document.getElementById('nome').value;
+      const email = document.getElementById('email').value;
+      const senha = document.getElementById('senha').value;
 
-      const data = await response.json();
+      axios.post(`${url}/login/registrar`, { nome, email, senha })
+        .then(response => {
+          alert('Usuário registrado com sucesso!');
+          window.location.href = 'entrar.html';
+        })
+        .catch(error => {
+          alert('Erro ao registrar usuário: ' + (error.response?.data?.mensagem || error.message));
+        });
+    });
+  }
 
-        if (!response.ok) {
-            alert(data.errors ? data.errors.join('\n') : 'Erro ao fazer login.');
-            return;
-        }
+  const loginForm = document.getElementById('loginForm');
+  if (loginForm) {
+    loginForm.addEventListener('submit', function (e) {
+      e.preventDefault();
 
+      const email = document.getElementById('email').value;
+      const senha = document.getElementById('senha').value;
 
-      window.location.href = '../../views/projeto/home.html';
-    } catch (err) {
-      console.error('Erro ao tentar fazer login:', err);
-      alert('Erro ao conectar com o servidor.');
-    }
-  });
+      axios.post(`${url}/login/entrar`, { email, senha })
+        .then(response => {
+          const usuario = response.data.usuario; 
+
+          localStorage.setItem('usuario', JSON.stringify(usuario)); 
+          alert('Login realizado com sucesso!');
+          window.location.href = '../projeto/home.html';
+        })
+        .catch(error => {
+          alert('Erro ao fazer login: ' + (error.response?.data?.mensagem || error.message));
+        });
+    });
+  }
 });
