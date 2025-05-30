@@ -1,5 +1,7 @@
 const url = 'http://localhost:3000';
 
+axios.defaults.withCredentials = true;
+
 document.addEventListener('DOMContentLoaded', async function () {
   const usuario = JSON.parse(localStorage.getItem('usuario'));
 
@@ -21,40 +23,69 @@ document.addEventListener('DOMContentLoaded', async function () {
     return date.toLocaleDateString('pt-BR');
   };
 
-  try {
-    const response = await axios.get(`${url}/projetos/index`);
-    const projetos = response.data.projetos;
-
-    const main = document.querySelector('main');
-    main.innerHTML = '';
-
-    if (!projetos || projetos.length === 0) {
-      main.innerHTML = '<p class="text-center">Nenhum projeto encontrado.</p>';
-      return;
+  async function excluirProjeto(id) {
+    if (!confirm('Deseja realmente excluir este projeto?')) return;
+    try {
+      await axios.delete(`${url}/projetos/apagar/${id}`);
+      alert('Projeto excluído com sucesso!');
+      carregarProjetos();
+    } catch (error) {
+      alert('Erro ao excluir o projeto: ' + (error.response?.data?.mensagem || error.message));
     }
-
-    projetos.forEach(projeto => {
-      const statusTexto = projeto.status ? 'Finalizado' : 'Pendente';
-      const statusClasse = projeto.status ? 'bg-success' : 'bg-warning text-dark';
-
-      const section = document.createElement('section');
-      section.className = 'bg-white p-4 rounded shadow mx-auto mb-4';
-      section.style.maxWidth = '700px';
-      section.innerHTML = `
-        <h2 class="h5 fw-bold mb-3">${projeto.nome}</h2>
-        <p><strong>Usuário responsável:</strong> ${projeto.usuario}</p>
-        <p><strong>Descrição:</strong> ${projeto.descricao}</p>
-        <p><strong>Data de entrega:</strong> ${formatarData(projeto.entrega)}</p>
-        <p>
-          <strong>Status:</strong>
-          <span class="badge ${statusClasse}">${statusTexto}</span>
-        </p>
-      `;
-      main.appendChild(section);
-    });
-  } catch (error) {
-    alert('Erro ao carregar os projetos: ' + (error.response?.data?.mensagem || error.message));
   }
+
+  async function carregarProjetos() {
+    try {
+      const response = await axios.get(`${url}/projetos/index`);
+      const projetos = response.data.projetos;
+
+      const main = document.querySelector('main');
+      main.innerHTML = '';
+
+      if (!projetos || projetos.length === 0) {
+        main.innerHTML = '<p class="text-center">Nenhum projeto encontrado.</p>';
+        return;
+      }
+
+      projetos.forEach(projeto => {
+        const statusTexto = projeto.status ? 'Finalizado' : 'Pendente';
+        const statusClasse = projeto.status ? 'bg-success' : 'bg-warning text-dark';
+
+        let botaoExcluir = '';
+        if (projeto.usuario === usuario.nome) {
+          botaoExcluir = `<button class="btn btn-danger btn-sm excluir-btn" data-id="${projeto.id}">Excluir</button>`;
+        }
+
+        const section = document.createElement('section');
+        section.className = 'bg-white p-4 rounded shadow mx-auto mb-4';
+        section.style.maxWidth = '700px';
+        section.innerHTML = `
+          <h2 class="h5 fw-bold mb-3">${projeto.nome}</h2>
+          <p><strong>Usuário responsável:</strong> ${projeto.usuario}</p>
+          <p><strong>Descrição:</strong> ${projeto.descricao}</p>
+          <p><strong>Data de entrega:</strong> ${formatarData(projeto.entrega)}</p>
+          <p>
+            <strong>Status:</strong>
+            <span class="badge ${statusClasse}">${statusTexto}</span>
+          </p>
+          ${botaoExcluir}
+        `;
+
+        main.appendChild(section);
+      });
+
+      document.querySelectorAll('.excluir-btn').forEach(button => {
+        button.addEventListener('click', function () {
+          const id = this.getAttribute('data-id');
+          excluirProjeto(id);
+        });
+      });
+    } catch (error) {
+      alert('Erro ao carregar os projetos: ' + (error.response?.data?.mensagem || error.message));
+    }
+  }
+
+  carregarProjetos();
 
   const logoutBtn = document.getElementById('logout');
   if (logoutBtn) {
@@ -92,14 +123,13 @@ document.addEventListener('DOMContentLoaded', async function () {
         inicio,
         entrega,
         status,
-        usuario: usuario.nome,
-        usuarioId: usuario.id
+        usuario: usuario.nome
       };
 
       try {
-        const res = await axios.post(`${url}/projetos/criar`, projeto);
+        await axios.post(`${url}/projetos/criar`, projeto);
         alert('Projeto criado com sucesso!');
-        window.location.href = 'home.html'; 
+        window.location.href = 'home.html';
       } catch (err) {
         console.error(err);
         alert('Erro ao criar o projeto: ' + (err.response?.data?.mensagem || err.message));
