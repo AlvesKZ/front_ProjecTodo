@@ -13,7 +13,6 @@ document.addEventListener('DOMContentLoaded', async function () {
 
   const nomeEl = document.getElementById('usuario-nome');
   const idEl = document.getElementById('usuario-id');
-
   if (nomeEl) nomeEl.textContent = usuario.nome.toUpperCase();
   if (idEl) idEl.textContent = usuario.id;
 
@@ -34,11 +33,14 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
   }
 
+  function editarProjeto(id) {
+    window.location.href = `editar.html?id=${id}`;
+  }
+
   async function carregarProjetos() {
     try {
       const response = await axios.get(`${url}/projetos/index`);
       const projetos = response.data.projetos;
-
       const main = document.querySelector('main');
       main.innerHTML = '';
 
@@ -51,9 +53,12 @@ document.addEventListener('DOMContentLoaded', async function () {
         const statusTexto = projeto.status ? 'Finalizado' : 'Pendente';
         const statusClasse = projeto.status ? 'bg-success' : 'bg-warning text-dark';
 
-        let botaoExcluir = '';
+        let botoesAcoes = '';
         if (projeto.usuario === usuario.nome) {
-          botaoExcluir = `<button class="btn btn-danger btn-sm excluir-btn" data-id="${projeto.id}">Excluir</button>`;
+          botoesAcoes = `
+            <button class="btn btn-primary btn-sm me-2 editar-btn" data-id="${projeto.id}">Editar</button>
+            <button class="btn btn-danger btn-sm excluir-btn" data-id="${projeto.id}">Excluir</button>
+          `;
         }
 
         const section = document.createElement('section');
@@ -61,14 +66,14 @@ document.addEventListener('DOMContentLoaded', async function () {
         section.style.maxWidth = '700px';
         section.innerHTML = `
           <h2 class="h5 fw-bold mb-3">${projeto.nome}</h2>
-          <p><strong>Usuário responsável:</strong> ${projeto.usuario}</p>
+          <p><strong>Usuário:</strong> ${projeto.usuario}</p>
           <p><strong>Descrição:</strong> ${projeto.descricao}</p>
           <p><strong>Data de entrega:</strong> ${formatarData(projeto.entrega)}</p>
           <p>
             <strong>Status:</strong>
             <span class="badge ${statusClasse}">${statusTexto}</span>
           </p>
-          ${botaoExcluir}
+          <div>${botoesAcoes}</div>
         `;
 
         main.appendChild(section);
@@ -80,31 +85,95 @@ document.addEventListener('DOMContentLoaded', async function () {
           excluirProjeto(id);
         });
       });
+
+      document.querySelectorAll('.editar-btn').forEach(button => {
+        button.addEventListener('click', function () {
+          const id = this.getAttribute('data-id');
+          editarProjeto(id);
+        });
+      });
+
     } catch (error) {
       alert('Erro ao carregar os projetos: ' + (error.response?.data?.mensagem || error.message));
     }
   }
 
-  carregarProjetos();
+  function getProjectId() {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('id');
+  }
 
-  const logoutBtn = document.getElementById('logout');
-  if (logoutBtn) {
-    logoutBtn.addEventListener('click', async function (e) {
-      e.preventDefault();
-      try {
-        await axios.get(`${url}/login/sair`);
-        localStorage.removeItem('usuario');
-        window.location.href = '../login/entrar.html';
-      } catch (err) {
-        alert('Erro ao sair da conta.');
-      }
-    });
+  function timestampParaDataInput(ts) {
+    if (!ts) return '';
+    if (ts._seconds) {
+      const date = new Date(ts._seconds * 1000);
+      return date.toISOString().substring(0, 10);
+    }
+    if (typeof ts === 'string') {
+      return ts.substring(0, 10);
+    }
+    if (ts instanceof Date) {
+      return ts.toISOString().substring(0, 10);
+    }
+    return '';
+  }
+
+  async function carregarProjeto(id) {
+    try {
+      const response = await axios.get(`${url}/projetos/mostrar/${id}`);
+      const projeto = response.data.projeto;
+
+      document.getElementById('nome').value = projeto.nome || '';
+      document.getElementById('descricao').value = projeto.descricao || '';
+      document.getElementById('inicio').value = timestampParaDataInput(projeto.inicio);
+      document.getElementById('entrega').value = timestampParaDataInput(projeto.entrega);
+      document.getElementById('status').checked = projeto.status === true;
+    } catch (error) {
+      alert('Erro ao carregar o projeto: ' + (error.response?.data?.mensagem || error.message));
+    }
+  }
+
+  async function editarProjetoSubmit(event) {
+    event.preventDefault();
+
+    const id = getProjectId();
+    if (!id) {
+      alert('ID do projeto não informado!');
+      return;
+    }
+
+    const nome = document.getElementById('nome').value.trim();
+    const descricao = document.getElementById('descricao').value.trim();
+    const inicio = document.getElementById('inicio').value;
+    const entrega = document.getElementById('entrega').value;
+    const status = document.getElementById('status').checked;
+
+    if (!nome || !descricao || !inicio || !entrega) {
+      alert('Preencha todos os campos.');
+      return;
+    }
+
+    try {
+      await axios.put(`${url}/projetos/editar/${id}`, {
+        nome,
+        descricao,
+        inicio,
+        entrega,
+        status,
+        usuario: usuario.nome
+
+      });
+      alert('Projeto atualizado com sucesso!');
+      window.location.href = 'home.html';
+    } catch (error) {
+      alert('Erro ao atualizar projeto: ' + (error.response?.data?.mensagem || error.message));
+    }
   }
 
   const formProjeto = document.getElementById('formProjeto');
   if (formProjeto) {
-    formProjeto.addEventListener('submit', async function (e) {
-      e.preventDefault();
+    formProjeto.addEventListener('submit', async function (event) {
+      event.preventDefault();
 
       const nome = document.getElementById('nome').value.trim();
       const descricao = document.getElementById('descricao').value.trim();
@@ -117,22 +186,52 @@ document.addEventListener('DOMContentLoaded', async function () {
         return;
       }
 
-      const projeto = {
-        nome,
-        descricao,
-        inicio,
-        entrega,
-        status,
-        usuario: usuario.nome
-      };
-
       try {
-        await axios.post(`${url}/projetos/criar`, projeto);
+        await axios.post(`${url}/projetos/criar`, {
+          nome,
+          descricao,
+          inicio,
+          entrega,
+          status,
+          usuario: usuario.nome
+        });
         alert('Projeto criado com sucesso!');
         window.location.href = 'home.html';
+      } catch (error) {
+        alert('Erro ao criar projeto: ' + (error.response?.data?.mensagem || error.message));
+      }
+    });
+  }
+
+  if (window.location.pathname.endsWith('editar.html')) {
+    const id = getProjectId();
+    if (!id) {
+      alert('ID do projeto não informado na URL.');
+      window.location.href = 'home.html';
+      return;
+    }
+    carregarProjeto(id);
+
+    const formEditar = document.getElementById('formEditarProjeto');
+    if (formEditar) {
+      formEditar.addEventListener('submit', editarProjetoSubmit);
+    }
+  }
+
+  if (window.location.pathname.endsWith('home.html')) {
+    carregarProjetos();
+  }
+
+  const logoutBtn = document.getElementById('logout');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', async function (e) {
+      e.preventDefault();
+      try {
+        await axios.get(`${url}/login/sair`);
+        localStorage.removeItem('usuario');
+        window.location.href = '../login/entrar.html';
       } catch (err) {
-        console.error(err);
-        alert('Erro ao criar o projeto: ' + (err.response?.data?.mensagem || err.message));
+        alert('Erro ao sair da conta.');
       }
     });
   }
